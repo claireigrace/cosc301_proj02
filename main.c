@@ -10,9 +10,10 @@
 #include <sys/stat.h>
 #include <poll.h>
 #include <signal.h>
+#include <stdbool.h>
 
 
-void replace_hash (char [] arr) {
+void replace_hash (char arr []) {
 	for (int i = 0; i<strlen(arr); i++) {
 		if (arr[i] == '#') {
 			arr[i] = '\0';
@@ -21,7 +22,7 @@ void replace_hash (char [] arr) {
 }
 
 
-bool check_exit (char []arr) {
+bool check_exit (char arr[]) {
 
 	char exit[] = "exit";
 	if (strcmp(arr, exit) ==0) {
@@ -31,12 +32,12 @@ bool check_exit (char []arr) {
 }
 
 
-char*[] tokenify(char input []) {
+char** tokenify(char input []) {
 	char *ptr_input = input;
 	char *pstring = strdup(ptr_input); //pointer to copy of input 
 	char *ptoken; 
 	ptoken = strtok(pstring, "; \t\n"); // ptoken now points to first token
-	char *array[] = malloc(sizeof(char*)*((strlen(ptr_input)/2)+2));
+	char **array = malloc(sizeof(char*)*((strlen(ptr_input)/2)+2));
 	
 	// count the number of tokens
 	int i = 0;
@@ -75,13 +76,13 @@ int main(int argc, char **argv) {
 		input[strlen(input)-1] = '\0';
 
 		// exit if input only says EOF or exit
-		if (check_exit(input)==true) { exit();}
+		if (check_exit(input)==true) { exit(0);}
 
 		// ignore comments; replace all # with null termination
 		replace_hash(input);
 
 		// parse the command and organize the separate commands in memory
-		char * ptrs[] = tokenify(input); // array of char pointers to each different token (commands will always start with /bin
+		char **ptrs = tokenify(input); // array of char pointers to each different token (commands will always start with /bin)
 
 
 		// NOW: 
@@ -93,7 +94,7 @@ int main(int argc, char **argv) {
 
 	// fgets returned NULL, so check for EOF
 	if (feof(stdin)) {
-		exit(); // exit if there's EOF 
+		exit(0); // exit if there's EOF 
 	}
 	
 	free(ptrs);
