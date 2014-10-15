@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
 						}
 					else {
 						//if parent wait
-						wait(NULL); 
+						wait(child_pid); 
 						}
 					i++; //increment
 					}
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
 						}
 				
 						else {
-							wait(NULL); 
+							wait(child); 
 						}
 					}
 					i++;
