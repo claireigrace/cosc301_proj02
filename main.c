@@ -29,7 +29,7 @@ void removewhitespace(char *s) {
 }
 
 
-void replace_hash (char arr []) {
+void replace_hash (char *arr) {
 	for (int i = 0; i<strlen(arr); i++) {
 		if (arr[i] == '#') {
 			arr[i] = '\0';
@@ -69,7 +69,7 @@ char** tokenify_semicolon(char input []) {
 	return array;
 }
 
-char** tokenify_space(char input []) {
+char** tokenify_space(char *input) {
 	char *ptr_input = input;
 	char *pstring = strdup(ptr_input); //pointer to copy of input 
 	char *ptoken; 
@@ -122,6 +122,7 @@ int main(int argc, char **argv) {
 
 		char input[1024];
 		char * input_dup = input;
+		char * mode_check = "mode";
 		printf("prompt: ");
 		fflush(stdout);
 
@@ -130,26 +131,30 @@ int main(int argc, char **argv) {
 
 		
 			input[strlen(input)-1] = '\0';
-			const char *inputptr = input;
-			// exit if input only says EOF or exit
-			if (check_exit(inputptr)==true) { exit(0);} // must pass const char * here
-
-			if (check_mode(input_dup)==true) {
-
-				if (mode ==0) {
-					printf("Current mode is sequential\n");
-				}
-
-				else if (mode==1) {
-					printf("Current mode is parallel\n"); 
-				}
-			}
-
 			// ignore comments; replace all # with null termination
 			replace_hash(input);
 
+			//const char *inputptr = input;
+
+
 			// parse the command and organize the separate commands in memory
-			ptrs = tokenify_semicolon(input); // array of char pointers to each different token (commands will always start with /bin)
+			ptrs = tokenify_semicolon(input); 
+
+
+			if (strstr(input_dup, mode_check)!=NULL) {
+				if (check_mode(input_dup)==true) {
+
+					if (mode ==0) {
+						printf("Current mode is sequential\n");
+					}
+
+					else if (mode==1) {
+						printf("Current mode is parallel\n"); 
+					}	
+				}
+			}
+
+			
 
 	////////////////////////////////////////////////////////////////////////
 			const char * mode_word = "mode";
@@ -160,10 +165,12 @@ int main(int argc, char **argv) {
 	//////////////////////////////////////////////
 			if (mode ==0) {
 				char** temp1= ptrs;
+				
 				int i =0;
-			
+
 				pid_t child_pid;
 				while (temp1[i]!=NULL) {
+
 					if ( strstr(temp1[i], mode_word) !=NULL) {
 						if (strstr(temp1[i],seq)!=NULL) {new_mode=1;}
 						if (strstr(temp1[i],par)!=NULL) {new_mode=2;}
@@ -172,24 +179,34 @@ int main(int argc, char **argv) {
 						}
 					if ( check_exit(temp1[i])==true) {
 						exit(0);
-						}
+					}
+
+
 					child_pid = fork();
 					if (child_pid ==0) { 
 						//if in child
-						command = tokenify_space(*temp1);
+						command = tokenify_space(temp1[i]);
+						
+						if (command[0] == NULL) {
+							i++;
+							continue;
+						}
+
+
 						if (execv(command[0], command) < 0) {
 		    						printf("execv failed\n");
 						}
 						exit(0);
 					
-						}
+					}
 					else {
 						//if parent wait
 						int return_status;
 						waitpid(child_pid, &return_status, 0); 
-						}
-					i++; //increment
+						i++;	
 					}
+				
+				}
 
 				// change mode 
 				if (new_mode==1) {mode=0;}
@@ -200,10 +217,10 @@ int main(int argc, char **argv) {
 		
 			// when in parallel mode...
 			// check for exit command in parallel mode and mode switch in parallel
-			char ** temp = ptrs;
-			int i = 0;
 
-			if (mode ==1) {
+			else if (mode ==1) {
+				char ** temp = ptrs;
+				int i = 0;
 			
 				// loop through all tokens to find mode or exit changes
 				while (temp[i] != NULL) {
@@ -232,14 +249,27 @@ int main(int argc, char **argv) {
 						pid_t child = fork();
 
 						if (child ==0) {
-							execv(ptrs[i], ptrs); // HOW do i call execv?
+							command = tokenify_space(temp[i]);
+
+							if (command[0] == NULL) {
+								i++;
+								continue;
+							}	
+
+							if (execv(command[0], command) < 0) {
+		    					printf("execv failed\n");
+							}
+							exit(0);
 						}
 				
 						else {
-							waitpid(child, NULL, -1); 
+							int return_status;
+							waitpid(child, &return_status, 0);
+							
 						}
 					}
 					i++;
+					
 				}
 
 				
