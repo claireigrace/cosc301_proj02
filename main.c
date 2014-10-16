@@ -12,6 +12,19 @@
 #include <signal.h>
 #include <stdbool.h>
 
+struct node {
+	char * word;
+	struct node *next;
+
+};
+
+
+//bool file_exists() {
+
+
+//}
+
+
 void removewhitespace(char *s) {
 
 	// move through the c string with reading and writing markers
@@ -102,6 +115,32 @@ bool check_mode(char* input) {
 
 }
 
+void list_append(char* name, struct node **head) { // taken from hw03
+	
+	struct node *newnode = malloc(sizeof(struct node));
+	newnode->word = name;
+	newnode->next = NULL;
+
+	if (*head == NULL) { // if list is empty, set it to new node
+		*head = newnode; 
+		printf("my head is null\n");
+		return;
+		
+	}
+
+	struct node *temp = *head;
+	printf("my head is not null\n");
+	
+	while (temp->next != NULL) {
+		temp = temp->next;
+	}
+	
+
+	temp->next = newnode;
+	
+
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -116,6 +155,41 @@ int main(int argc, char **argv) {
 	int new_mode = 0; // 0 means no change, 1 means to S, 2 means to P
 	char ** ptrs;
 	bool done = false;
+	char *newnewstring = malloc(sizeof(char)*1024);
+
+	struct node *head = NULL;
+
+
+    FILE *fp = NULL;
+	fp = fopen ("shell-config", "r");
+	char line[128];
+	char * linep = line;
+
+	while(fgets(line, 128, fp) != NULL)
+   {
+
+	 	//strip line
+		removewhitespace(linep);
+
+		int length = strlen(linep);
+
+		char new [length+1];
+		char * newp = new;
+		strcpy(newp, linep);
+		char slash[] = "/";
+		char * slashp = slash;
+
+		newp=strcat(newp, slashp);
+
+		//then append to the list 
+		list_append(newp, &head);
+		printf("adding %s\n", newp);
+
+   }
+
+	struct node *temp = head;
+	printf("this is head's first %s\n", head->word);
+	printf("this is temp's first %s\n", temp->word);
 
 	while (!done) {
 
@@ -192,7 +266,38 @@ int main(int argc, char **argv) {
 							continue;
 						}
 
+						// path variable capability
+						
+						struct stat statresult;
+						int rv = stat(command[0], &statresult);
+						char *cmdcopy=command[0];
+						char newstr[1024];
+						newstr[0] = '\0';
+						char *newstring=newstr;
 
+						if (rv<0){
+							printf("iam in rv<0\n");
+							while(temp->next!=NULL) {
+								printf("this is temp word %s\n", temp->word);
+								newstring=strcat(newstring,temp->word);
+								newstring=strcat(newstring,cmdcopy);
+								printf("this is newstring: %s\n", newstring);
+								rv= stat(newstring,&statresult);
+					
+								printf("iam in this while\n");
+								if (rv==0) {
+									printf("im in ==0\n");
+									strcpy(newnewstring, newstring);
+									command[0] = newnewstring;
+									printf("i am %s \n", command[0]);
+									break;
+								}
+								temp=temp->next;
+							}
+						}
+
+
+						printf("ajdshka\n");
 						if (execv(command[0], command) < 0) {
 		    						printf("execv failed\n");
 						}
@@ -285,16 +390,23 @@ int main(int argc, char **argv) {
 				if (exit_later == 1) {
 					exit(0);
 				}
+				}
 			}
-		}
+
+		
 
 		// fgets returned NULL, so check for EOF
 		if (feof(stdin)) {
+			fclose(fp);
+		
+			free(newnewstring);
+			free(ptrs);
+			free(newnode);
+
 			exit(0); // exit if there's EOF 
 		}
 	
-		free(ptrs);
-
+		
 	}
 	return 0;
 }
