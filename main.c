@@ -19,10 +19,13 @@ struct node {
 };
 
 
-//bool file_exists() {
+struct node2 {
+	pid_t pid;
+	char * process;
+	char * status;
+	struct node2 *next;
 
-
-//}
+};
 
 
 void removewhitespace(char *s) {
@@ -252,6 +255,7 @@ int main(int argc, char **argv) {
 
 
 					child_pid = fork();
+
 					if (child_pid ==0) { 
 						//if in child
 						command = tokenify_space(temp1[i]);
@@ -347,24 +351,74 @@ int main(int argc, char **argv) {
 					// if it's NOT mode or exit, then...
 					if (strstr(ptrs[i], mode_word)==NULL && strstr(ptrs[i], exit_word)==NULL) {
 						pid_t child = fork();
+						
 
 						if (child ==0) {
-							command = tokenify_space(temp[i]);
 
-							if (command[0] == NULL) {
-								i++;
-								continue;
-							}	
+							pid_t child2 = fork();
+							if (child2 == 0) {
+							
+								command = tokenify_space(temp[i]);
 
-							if (execv(command[0], command) < 0) {
-		    					printf("execv failed\n");
+								if (command[0] == NULL) {
+									i++;
+									continue;
+								}	
+
+
+								// path variable capability
+						
+								struct stat statresult;
+								int rv = stat(command[0], &statresult);
+								char *cmdcopy=command[0];
+								char newstr[1024];
+								newstr[0] = '\0';
+								char *newstring=newstr;
+
+								if (rv<0){
+					
+									while(tempnode->next!=NULL) {
+						
+										newstring=strcat(newstring,tempnode->word);
+										newstring=strcat(newstring,cmdcopy);
+							
+										rv= stat(newstring,&statresult);
+					
+						
+										if (rv==0) {
+								
+											strcpy(newnewstring, newstring);
+											command[0] = newnewstring;
+							
+											break;
+										}
+										tempnode=tempnode->next;
+									}
+								}
+
+
+
+								if (execv(command[0], command) < 0) {
+									printf("execv failed\n");
+								}
+								exit(0);
 							}
-							exit(0);
+								
+							else {
+								int return_status;
+								waitpid(child2, &return_status, 0);
+								
+								printf("Process %i has completed", child2);
+								exit(0);
+
+							}						
+		
 						}
 				
 						else {
-							int return_status;
-							waitpid(child, &return_status, 0);
+						
+							//int return_status;
+							//waitpid(child, &return_status, 0);
 							
 						}
 					}
