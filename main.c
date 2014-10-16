@@ -123,22 +123,20 @@ void list_append(char* name, struct node **head) { // taken from hw03
 
 	if (*head == NULL) { // if list is empty, set it to new node
 		*head = newnode; 
-		printf("my head is null\n");
+		
 		return;
 		
 	}
 
 	struct node *temp = *head;
-	printf("my head is not null\n");
+
 	
 	while (temp->next != NULL) {
 		temp = temp->next;
 	}
 	
-
 	temp->next = newnode;
-	
-
+	return;
 }
 
 
@@ -157,39 +155,36 @@ int main(int argc, char **argv) {
 	bool done = false;
 	char *newnewstring = malloc(sizeof(char)*1024);
 
-	struct node *head = NULL;
-
+	struct node *head = malloc(sizeof(struct node));
 
     FILE *fp = NULL;
 	fp = fopen ("shell-config", "r");
-	char line[128];
+	char line[1024];
 	char * linep = line;
+	char * newp;
+
+	
 
 	while(fgets(line, 128, fp) != NULL)
    {
 
 	 	//strip line
 		removewhitespace(linep);
-
-		int length = strlen(linep);
-
-		char new [length+1];
-		char * newp = new;
+		newp = malloc(sizeof(char)*1024);
 		strcpy(newp, linep);
 		char slash[] = "/";
 		char * slashp = slash;
-
+		
 		newp=strcat(newp, slashp);
 
 		//then append to the list 
 		list_append(newp, &head);
-		printf("adding %s\n", newp);
+	
 
    }
 
-	struct node *temp = head;
-	printf("this is head's first %s\n", head->word);
-	printf("this is temp's first %s\n", temp->word);
+	struct node *tempnode = head->next;
+
 
 	while (!done) {
 
@@ -276,28 +271,28 @@ int main(int argc, char **argv) {
 						char *newstring=newstr;
 
 						if (rv<0){
-							printf("iam in rv<0\n");
-							while(temp->next!=NULL) {
-								printf("this is temp word %s\n", temp->word);
-								newstring=strcat(newstring,temp->word);
+					
+							while(tempnode->next!=NULL) {
+						
+								newstring=strcat(newstring,tempnode->word);
 								newstring=strcat(newstring,cmdcopy);
-								printf("this is newstring: %s\n", newstring);
+							
 								rv= stat(newstring,&statresult);
 					
-								printf("iam in this while\n");
+						
 								if (rv==0) {
-									printf("im in ==0\n");
+								
 									strcpy(newnewstring, newstring);
 									command[0] = newnewstring;
-									printf("i am %s \n", command[0]);
+							
 									break;
 								}
-								temp=temp->next;
+								tempnode=tempnode->next;
 							}
 						}
 
 
-						printf("ajdshka\n");
+		
 						if (execv(command[0], command) < 0) {
 		    						printf("execv failed\n");
 						}
@@ -401,7 +396,7 @@ int main(int argc, char **argv) {
 		
 			free(newnewstring);
 			free(ptrs);
-			free(newnode);
+		
 
 			exit(0); // exit if there's EOF 
 		}
