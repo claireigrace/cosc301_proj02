@@ -1,5 +1,6 @@
 //Claire Grace 
 //Ethan Jones
+// Ethan worked on the sequential code, Claire worked on the initial parallel code, and they worked on everything else together.
 
 #include <stdio.h>
 #include <stdlib.h>
